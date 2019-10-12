@@ -30,7 +30,7 @@ int main()
 
 	db_select_query(mysql, select_query);									//查询
 
-	db_select_query(mysql, "UPDATE test_table set names = 'Susan' where user_id = 4");			//修改
+	db_change_query(mysql, "UPDATE test_table set names = 'Susan' where user_id = 4");			//修改
 
 	db_select_query(mysql, select_query);									//查询
 
