@@ -63,7 +63,7 @@ int db_change_query(MYSQL* mysql, const char* query)
 }
 
 //查询 接口
-MYSQL_ROW* db_select_query(MYSQL* mysql, const char* query)
+int db_select_query(MYSQL* mysql, const char* query)
 {
 	int affected_rows = 0;
 	MYSQL_RES* sel_res;
@@ -79,7 +79,7 @@ MYSQL_ROW* db_select_query(MYSQL* mysql, const char* query)
 	{
 		printf("Query ERRO \n");
 		syslog(LOG_ERR, "Database query failed:%s [%s]\n", mysql_error(mysql), query);
-		return NULL;
+		return -1;
 	}
 
 	//判断是否执行select操作成功
@@ -87,7 +87,7 @@ MYSQL_ROW* db_select_query(MYSQL* mysql, const char* query)
 	if (NULL == sel_res)
 	{
 		syslog(LOG_ERR, "mysql_store_result() happened error:%s", mysql_error(mysql));
-		return NULL;
+		return -1;
 	}
 
 	printf("Select Successful \n");
@@ -117,5 +117,5 @@ MYSQL_ROW* db_select_query(MYSQL* mysql, const char* query)
 
 	mysql_free_result(sel_res);
 
-	return sel_row;
+	return 0;
 }
