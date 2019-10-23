@@ -16,15 +16,15 @@ int test_table_insert(test_info* test)
 		return -1;
 	}
 	
-	mysql = db_connect(TEST_HOST, TEST_USER, TEST_PASSWD, TEST_DB_NAME);			//连接
+	mysql = db_connect(TEST_HOST, TEST_USER, TEST_PASSWD, TEST_DB_NAME);					//连接
 
-	sprintf(exec_query, prep_query, "test_table", "user_id", "names", test->user_id, test->names);		//拼接
+	sprintf(exec_query, prep_query, "test_table", "user_id", "names", test->user_id, test->names);		//拼接语句
 
-	ret = db_operate(mysql, exec_query, NULL);										//语句执行
+	ret = db_operate(mysql, exec_query, NULL);								//执行操作
 
-	db_disconnect(mysql);															//断开
+	db_disconnect(mysql);											//断开
 
-	free(exec_query);
+	free(exec_query);																					//释放句柄空间
 
 	if (ret == 0)
 	{
@@ -48,9 +48,9 @@ int test_table_delete(test_info* test)
 
 	sprintf(exec_query, prep_query, "test_table", "user_id", test->user_id);		//拼接
 
-	ret = db_operate(mysql, exec_query, NULL);										//语句执行
+	ret = db_operate(mysql, exec_query, NULL);						//执行操作
 
-	db_disconnect(mysql);															//断开
+	db_disconnect(mysql);									//断开
 
 	if (ret == 0)
 	{
@@ -75,15 +75,15 @@ int test_table_update(test_info* test)
 		return -1;
 	}
 
-	mysql = db_connect(TEST_HOST, TEST_USER, TEST_PASSWD, TEST_DB_NAME);			//连接
+	mysql = db_connect(TEST_HOST, TEST_USER, TEST_PASSWD, TEST_DB_NAME);					//连接
 
 	sprintf(exec_query, prep_query, "test_table", "names", test->names, "user_id", test->user_id);		//拼接
 
-	ret = db_operate(mysql, exec_query, NULL);										//语句执行
+	ret = db_operate(mysql, exec_query, NULL);								//执行操作
 
-	db_disconnect(mysql);															//断开
+	db_disconnect(mysql);											//断开
 
-	free(exec_query);
+	free(exec_query);																					//释放语句空间
 
 	if (ret == 0)
 	{
@@ -104,11 +104,11 @@ int test_table_select(MYSQL_RES** result)
 
 	mysql = db_connect(TEST_HOST, TEST_USER, TEST_PASSWD, TEST_DB_NAME);			//连接
 
-	sprintf(exec_query, prep_query,"test_table");				//拼接
+	sprintf(exec_query, prep_query,"test_table");						//拼接
 
-	ret = db_operate(mysql,exec_query,result);		//语句执行
+	ret = db_operate(mysql,exec_query,result);						//执行操作
 
-	db_disconnect(mysql);															//断开
+	db_disconnect(mysql);									//断开
 
 	if (ret == 0)
 	{
