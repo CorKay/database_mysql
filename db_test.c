@@ -1,40 +1,32 @@
 #include "db_base.h"
+#include "db_business.h"
 
 //Test
 int main()
 {
-	const char* host = "localhost";
-	const char* user = "root";
-	const char* passwd = "123";
-	const char* db_name = "test";
+	test_info example = { 30,"XiaoHong" };
+	test_info new_example = { 30,"LaoHong" };
 
-	char* prep_ins_query = "INSERT INTO test_table (%s) VALUES (%s)";
-	char insert_query[512] = { 0 };
+	char* result_test1 = NULL;
+	char* result_test2 = NULL;
+	char* result_test3 = NULL;
+	
+	test_table_insert(&example);							//插入
+	result_test1 = test_table_select();						//查询
+	printf("select1 结果集: \n%s\n", result_test1);
+	business_free(result_test1);
+	
 
-	char* prep_sel_query = "SELECT * from %s";
-	char select_query[256] = { 0 };
-
-	MYSQL* mysql = db_get_connect(host, user, passwd, db_name);						//连接
-	if (mysql == NULL)
-	{
-		printf("db_connect failed \n");
-		syslog(LOG_ERR, "db_connect failed\n");
-		return 0;
-	}
-
-	sprintf(insert_query, prep_ins_query, "names", "'WangMing'");						//拼接插入语句
-
-	sprintf(select_query, prep_sel_query, "test_table");							//拼接查询语句
-
-	db_change_query(mysql, insert_query);									//插入
-
-	db_select_query(mysql, select_query);									//查询
-
-	db_change_query(mysql, "UPDATE test_table set names = 'Susan' where user_id = 4");			//修改
-
-	db_select_query(mysql, select_query);									//查询
-
-	db_disconnect(mysql);											//断开连接
-
+	test_table_update(&new_example);						//更新
+	result_test2 = test_table_select();						//查询
+	printf("select2 结果集: \n%s\n", result_test2);
+	business_free(result_test2);
+	
+	
+	test_table_delete(&new_example);						//删除
+	result_test3 = test_table_select();						//查询
+	printf("select3 结果集: \n%s\n", result_test3);
+	business_free(result_test3);
+	
 	return 0;
 }
