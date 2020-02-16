@@ -10,7 +10,7 @@ MYSQL* db_connect(const char* host, const char* user, const char* passwd, const 
 		printf("malloc failed \n");
 		return NULL;
 	}
-	printf("Malloc successful,mysql is %p \n", mysql);
+	printf("mysql malloc successful,mysql is %p \n", mysql);
 
 	mysql = mysql_init(mysql);
 	if (mysql == NULL)
@@ -41,71 +41,108 @@ void db_disconnect(MYSQL* mysql)
 {
 	mysql_close(mysql);
 	free(mysql);
+	printf("Disconnect~ ~ \n");
 }
 
-//增 删 改 接口
-int db_change_query(MYSQL* mysql, const char* query)
+//数据库操作接口
+int db_operate(MYSQL* mysql, const char* query, MYSQL_RES** result)
 {
 	printf("sql_query : %s \n", query);
-	
-	//语句执行结果
+
+	int affected_rows = 0;
+	MYSQL_RES* sel_ret = NULL;
+
+	//语句执行
 	if (mysql_query(mysql, query) != 0)
 	{
 		printf("Query ERRO \n");
 		syslog(LOG_ERR, "Database query failed:%s[%s]\n", mysql_error(mysql), query);
 		return -1;
 	}
+	printf("query successful \n");
 
-	//打印表中变化的行数
-	printf("affected rows:%lld \n", mysql_affected_rows(mysql));
+	if (mysql_field_count(mysql) > 0)						//判断是否执行的是查询语句
+	{
+		if (!(sel_ret = mysql_store_result(mysql)))				//取出结果集
+		{
+			printf("mysql_store_result ERRO \n");
+			syslog(LOG_ERR, "mysql_store_result() happened error:%s", mysql_error(mysql));
+			return -1;
+		}
 
-	return 0;
+		if (mysql_num_rows(sel_ret) != 0)
+		{
+			if (result == NULL)
+			{
+				mysql_free_result(sel_ret);
+			}
+			else
+			{
+				*result = sel_ret;					//返回查询结果
+			}
+			return 0;
+		}
+		else
+		{
+			if (result == NULL)
+			{
+				mysql_free_result(sel_ret);
+			}
+			else
+			{
+				*result = sel_ret;
+				sel_ret = NULL;
+			}
+			return -1;
+		}
+	}
+	else
+	{
+		affected_rows = mysql_affected_rows(mysql);
+		printf("affected rows:%lld \n", mysql_affected_rows(mysql));		//打印表中变化的行数
+		return 0;
+	}
 }
 
-//查询 接口
-int db_select_query(MYSQL* mysql, const char* query)
+//释放结果集内存
+void db_free_select_result(MYSQL_RES** sel_result)
 {
-	int affected_rows = 0;
-	MYSQL_RES* sel_res;
-	MYSQL_FIELD* sel_field;
-	MYSQL_ROW*   sel_row;
+	MYSQL_RES* prep_result = NULL;
 
-	int cols, i;
-	
-	printf("sql_query : %s \n", query);
-
-	//语句执行
-	if (mysql_query(mysql, query) != 0)
+	if (sel_result != NULL)
 	{
-		printf("Query ERRO \n");
-		syslog(LOG_ERR, "Database query failed:%s [%s]\n", mysql_error(mysql), query);
-		return -1;
+		prep_result = *sel_result;
+		if (prep_result != NULL)
+		{
+			mysql_free_result(prep_result);
+			prep_result = NULL;
+			*sel_result = prep_result;
+		}
 	}
+}
 
-	//判断是否执行select操作成功
-	sel_res = mysql_store_result(mysql);
-	if (NULL == sel_res)
-	{
-		syslog(LOG_ERR, "mysql_store_result() happened error:%s", mysql_error(mysql));
-		return -1;
-	}
+//打印结构集
+int print_res(MYSQL_RES* res)
+{
+	MYSQL_FIELD* sel_field;								//结果集的字段信息
+	MYSQL_ROW sel_row;								//结果集字段的行数
 
-	printf("Select Successful \n");
-	printf("num rows:%lld \n", mysql_num_rows(sel_res));
+	int cols, rows, i;
 
-#if 1
+	cols = mysql_num_fields(res);							//获取表的列数
+
 	//后台打印查询结果
-	cols = mysql_num_fields(sel_res);           //获取表的列数
-	printf("num cols:%d \n", cols);
 
-	sel_field = mysql_fetch_fields(sel_res);     //获取字段信息与类型
+	printf("*******************SELECT RESULT*******************\n");
+
+	sel_field = mysql_fetch_fields(res);						//获取字段信息与类型
 	for (i = 0; i < cols; i++)
 	{
 		printf("%s(type:%d)\t", sel_field[i].name, sel_field[i].type);
 	}
 	printf("\n");
 
-	while (sel_row = mysql_fetch_row(sel_res))   //打印结果
+	while (sel_row = mysql_fetch_row(res))						//打印结果
 	{
 		for (i = 0; i < cols; i++)
 		{
@@ -113,9 +150,6 @@ int db_select_query(MYSQL* mysql, const char* query)
 		}
 		printf("\n");
 	}
-#endif
-
-	mysql_free_result(sel_res);
 
 	return 0;
 }
